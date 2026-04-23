@@ -1,45 +1,84 @@
+// src/api/index.ts
 import type { Job, JobFilters, JobListItem, JobStepKey, SubContext, TopTab, TopTabKey, User } from '../domain/types'
-import { requestJson } from './request'
+// 引入静态数据
+import {
+  mockUser,
+  mockAllNames,
+  mockAllTypes,
+  mockAllStatuses,
+  mockGetJobList,
+  mockGetJobById,
+  mockDeleteJobById,
+  mockGetSubContextById
+} from './mock'
+
+// 模拟登录状态（简单实现，实际生产环境可能需要更复杂的本地存储逻辑）
+let isLoggedIn = true
 
 export function fetchCurrentUser(): Promise<User> {
-  return requestJson<User>('/api/user')
+  // 模拟异步延迟，让UI加载状态更真实
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(isLoggedIn ? mockUser : { id: '', name: '' })
+    }, 300)
+  })
 }
 
 export function fetchCurrentUserForLogin(): Promise<User> {
-  return requestJson<User>('/api/user?login=1')
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      isLoggedIn = true
+      resolve(mockUser)
+    }, 300)
+  })
 }
 
 export function loginOut(): Promise<{ ok: true }> {
-  return requestJson<{ ok: true }>('/api/logout', { method: 'POST' })
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      isLoggedIn = false
+      resolve({ ok: true })
+    }, 300)
+  })
 }
 
 export function getAllName(): Promise<string[]> {
-  return requestJson<string[]>('/api/filters/names')
+  return Promise.resolve(mockAllNames)
 }
 
 export function getAllType(): Promise<Array<JobFilters['type']>> {
-  return requestJson<Array<JobFilters['type']>>('/api/filters/types')
+  return Promise.resolve(mockAllTypes)
 }
 
 export function getAllStatus(): Promise<Array<JobFilters['status']>> {
-  return requestJson<Array<JobFilters['status']>>('/api/filters/statuses')
+  return Promise.resolve(mockAllStatuses)
 }
 
 export function getJobList(): Promise<JobListItem[]> {
-  return requestJson<JobListItem[]>('/api/jobs')
+  return Promise.resolve(mockGetJobList())
 }
 
 export function getJobById(jobId: string): Promise<Job> {
-  return requestJson<Job>(`/api/jobs/${encodeURIComponent(jobId)}`)
+  const job = mockGetJobById(jobId)
+  if (!job) {
+    return Promise.reject(new Error('Job not found'))
+  }
+  return Promise.resolve(job)
 }
 
 export function deleteJobById(jobId: string): Promise<{ ok: true }> {
-  return requestJson<{ ok: true }>(`/api/jobs/${encodeURIComponent(jobId)}`, { method: 'DELETE' })
+  const success = mockDeleteJobById(jobId)
+  if (!success) {
+    return Promise.reject(new Error('Job not found'))
+  }
+  return Promise.resolve({ ok: true })
 }
 
 export function getSubContextById(jobId: string, stepKey: JobStepKey): Promise<SubContext> {
-  return requestJson<SubContext>(`/api/subcontext/${encodeURIComponent(jobId)}?step=${encodeURIComponent(stepKey)}`)
+  return Promise.resolve(mockGetSubContextById(jobId, stepKey))
 }
 
-export { installApiMocks } from './request'
-
+// 不再需要 installApiMocks
+export function installApiMocks(): void {
+  // No-op
+}
