@@ -72,7 +72,7 @@ export function JobSteps(props: {
         </div>
       </div>
 
-      <Divider className="jobpane__divider" />
+      <Divider style={{ borderTopWidth: '2px', backgroundColor: '#ddd' }} />
 
       <div className="jobpane__stepsList">
         {job.steps.map((s, idx) => {
@@ -90,17 +90,8 @@ export function JobSteps(props: {
                 <div className="jobstep__title">
                   {idx + 1} {s.title}
                 </div>
-                <Tag
-                  className={`job-status ${
-                    s.status === 'completed'
-                      ? 'job-status--completed'
-                      : s.status === 'failed'
-                        ? 'job-status--failed'
-                        : ''
-                  }`}
-                  bordered
-                >
-                  {s.status}
+                <Tag className={jobStatusClass(job.status)} bordered>
+                  {statusLabel(job.status).toLowerCase()}
                 </Tag>
               </div>
               <Typography.Text type="secondary">{s.description}</Typography.Text>

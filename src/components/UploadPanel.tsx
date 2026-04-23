@@ -15,8 +15,8 @@ export function UploadPanel(props: {
 
   if (!job) return <Empty description="Select a job" />
 
-  const stateLabel = subContext?.overview.state ?? (uploadStep?.status === 'completed' ? 'Completed' : 'Pending')
-  const renameLabel = subContext?.overview.renameState ?? (renameStep?.status === 'completed' ? 'Completed' : 'Pending')
+  const stateLabel = subContext?.overview.state ?? (uploadStep?.status === 'completed' ? 'Completed' : 'Running')
+  const renameLabel = subContext?.overview.renameState ?? (renameStep?.status === 'completed' ? 'Completed' : 'Running')
   const detailNode =
     subContext?.overview.detail ??
     (uploaded ? (
@@ -26,20 +26,24 @@ export function UploadPanel(props: {
     ) : (
       'No file uploaded'
     ))
-  const runtimeStatus = subContext?.overview.runtimeStatus ?? (uploaded ? 'COMPLETED' : 'PENDING')
+  const runtimeStatus = subContext?.overview.runtimeStatus ?? (uploaded ? 'Uploaded Files' : 'Waiting')
   const definitionStepId = subContext?.overview.definitionStepId ?? 'mocked-d-step-id'
   const runtimeStepId = subContext?.overview.runtimeStepId ?? 'mocked-r-step-id'
 
   const completed = stateLabel === 'Completed'
 
   return (
-    <Space direction="vertical" style={{ width: '100%' }} size={10}>
+    <Space vertical style={{ width: '100%' }} size={10}>
       <Typography.Text type="secondary">
         Upload files to the first step&apos;s input directory of this run.
       </Typography.Text>
 
       <Tabs
         className="upload-tabs"
+        styles={{
+          item: { width: '90px', justifyContent: 'center', fontWeight: '600' },
+          indicator: { backgroundColor: '#000d80' }
+        }}
         items={[
           {
             key: 'overview',
@@ -49,34 +53,27 @@ export function UploadPanel(props: {
                 <div className="upload-stepCard">
                   <div className="upload-stepCard__head">
                     <div className="upload-stepCard__title">Step status</div>
-                    <Tag className={`upload-stepCard__status ${completed ? 'is-completed' : ''}`} bordered>
-                      {completed ? 'Completed' : 'Pending'}
-                    </Tag>
                   </div>
-
                   <div className="upload-stepCard__grid">
                     <div className="upload-stepCard__labels">
                       <div className="upload-rowLabel">State</div>
                       <div className="upload-rowLabel">Detail</div>
                       <div className="upload-rowLabel">Definition step id</div>
                       <div className="upload-rowLabel">Runtime step id</div>
+                      <div className="upload-rowLabel">Runtime name</div>
                       <div className="upload-rowLabel">Runtime status</div>
-                      <div className="upload-rowLabel">Rename step</div>
                     </div>
                     <div className="upload-stepCard__values">
-                      <div className="upload-rowValue">{stateLabel}</div>
-                      <div className="upload-rowValue">{detailNode}</div>
-                      <div className="upload-rowValue">
-                        <Typography.Text strong>{definitionStepId}</Typography.Text>
+                      <div style={{ fontWeight: 'normal' }} className="upload-rowValue">
+                        <Tag className={`${completed ? 'job-status--completed' : 'job-status--running'}`}>
+                          {completed ? 'Completed' : 'Running'}
+                        </Tag>
                       </div>
-                      <div className="upload-rowValue">
-                        <Typography.Text strong>{runtimeStepId}</Typography.Text>
-                      </div>
-                      <div className="upload-rowValue">
-                        <Typography.Text strong>{runtimeStatus}</Typography.Text>
-                      </div>
-                      <div className="upload-rowValue">{renameLabel}</div>
-                    </div>
+                      <Typography.Text className='upload-rowValue'>{detailNode}</Typography.Text>
+                      <Typography.Text className="upload-rowValue">{definitionStepId}</Typography.Text>
+                      <Typography.Text className="upload-rowValue">{runtimeStepId}</Typography.Text>
+                      <Typography.Text className="upload-rowValue">{runtimeStatus}</Typography.Text>
+                      <Typography.Text className="upload-rowValue">{renameLabel}</Typography.Text></div>
                   </div>
                 </div>
               </div>

@@ -154,41 +154,41 @@ export let mockJobs: Job[] = [
         key: 'upload',
         title: 'Upload',
         description: "Upload files to the first step's input directory of this run.",
-        status: 'pending'
+        status: 'running'
       },
       {
         key: 'rename',
         title: 'Rename File',
         description: 'Rename the file as needed.',
-        status: 'pending'
+        status: 'running'
       },
       {
         key: 'approval',
         title: 'Send Approval Notification',
         description: 'An approval notification will be sent out.',
-        status: 'pending'
+        status: 'running'
       },
       {
         key: 'review',
         title: 'Wait For Review',
         description: 'Waiting for review.',
-        status: 'pending'
+        status: 'running'
       }
     ]
   }),
   mkJob({
     id: 'job_c',
-    name: 'Nightly Ingest - Customer C',
+    name: 'Job Name for Sample C',
     type: 'Type C',
     status: 'failed',
-    createdAt: '2026-04-22T12:45:00.000Z',
+    createdAt: '2026-04-19T09:30:00.000Z',
     runtimeId: 'abcde-12345-00003',
     steps: [
       {
         key: 'upload',
         title: 'Upload',
         description: "Upload files to the first step's input directory of this run.",
-        status: 'completed'
+        status: 'failed'
       },
       {
         key: 'rename',
@@ -200,50 +200,50 @@ export let mockJobs: Job[] = [
         key: 'approval',
         title: 'Send Approval Notification',
         description: 'An approval notification will be sent out.',
-        status: 'pending'
+        status: 'failed'
       },
       {
         key: 'review',
         title: 'Wait For Review',
         description: 'Waiting for review.',
-        status: 'pending'
+        status: 'failed'
       }
     ]
   }),
   mkJob({
     id: 'job_d',
-    name: 'Quick Upload - Type A',
+    name: 'Job Name for Sample D',
     type: 'Type A',
     status: 'queued',
-    createdAt: '2026-04-23T01:05:00.000Z',
+    createdAt: '2026-04-23T14:45:00.000Z',
     runtimeId: 'abcde-12345-00004',
     steps: [
       {
         key: 'upload',
         title: 'Upload',
         description: "Upload files to the first step's input directory of this run.",
-        status: 'pending'
+        status: 'completed'
       },
       {
         key: 'rename',
         title: 'Rename File',
         description: 'Rename the file as needed.',
-        status: 'pending'
+        status: 'completed'
       },
       {
         key: 'approval',
         title: 'Send Approval Notification',
         description: 'An approval notification will be sent out.',
-        status: 'pending'
+        status: 'completed'
       },
       {
         key: 'review',
         title: 'Wait For Review',
         description: 'Waiting for review.',
-        status: 'pending'
+        status: 'completed'
       }
     ]
-  })
+  }),
 ]
 
 export function mockGetJobList(): JobListItem[] {

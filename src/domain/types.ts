@@ -4,7 +4,7 @@ export type JobType = 'Type A' | 'Type B' | 'Type C'
 
 export type JobStepKey = 'upload' | 'rename' | 'approval' | 'review'
 
-export type JobStepStatus = 'pending' | 'completed' | 'failed'
+export type JobStepStatus = 'running' | 'completed' | 'failed'
 
 export type JobStep = {
   key: JobStepKey

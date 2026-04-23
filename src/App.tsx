@@ -1,5 +1,5 @@
 import { Button, Card, ConfigProvider, Flex, Layout, Menu, Modal, Space, Typography, message } from 'antd'
-import { CompressOutlined, ExpandOutlined, LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons'
+import { CompressOutlined, ExpandOutlined, LogoutOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons'
 import zhCN from 'antd/locale/zh_CN'
 import dayjs from 'dayjs'
 import React from 'react'
@@ -348,7 +348,11 @@ export default function App() {
         components: {
           Menu: {
             horizontalItemSelectedColor: 'black',
-            horizontalItemSelectedBg: 'black'
+            horizontalItemSelectedBg: 'white',
+            itemColor: '#fff',
+          },
+          Tabs: {
+            itemSelectedColor: '#000d80',
           }
         }
       }}
@@ -361,7 +365,7 @@ export default function App() {
             selectedKeys={[activeTab]}
             style={{ flex: 1, minWidth: 240, background: 'transparent' }}
             styles={{
-              root: { height: '100%' },
+              root: { height: '100%', fontWeight: '600' },
               itemContent: { display: 'flex', height: '100%', alignItems: 'center' }
             }}
             items={tabs.map((t) => ({ key: t.key, label: t.label }))}
@@ -411,22 +415,19 @@ export default function App() {
                   <div className={`panel ${jobListCollapsed ? 'panel--collapsed' : ''}`}>
                     <div className="panel__title">
                       <div className="panel__titleRow">
-                        <Typography.Text strong className="panel__titleText">
+                        <Typography.Text style={{ fontSize: '24px', fontWeight: '700' }} className="panel__titleText">
                           Job List
                         </Typography.Text>
                         <Button
                           size="small"
-                          shape="default"
                           className="joblist-toggle"
-                          aria-label={jobListCollapsed ? 'expand-job-list' : 'collapse-job-list'}
-                          icon={jobListCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                          icon={jobListCollapsed ? <RightOutlined /> : <LeftOutlined />}
                           onClick={() => setJobListCollapsed((v) => !v)}
                         >
-                          <span className="joblist-toggle__label">收缩</span>
                         </Button>
                       </div>
                     </div>
-                    <div className="panel__body joblist__clip">
+                    <div style={{ padding: '0' }}>
                       <div className="joblist__fixed">
                         <JobList jobs={filteredJobs} selectedId={selectedJobId} onSelect={setSelectedJobId} />
                       </div>
@@ -435,7 +436,6 @@ export default function App() {
 
                   <div className={`main-area ${contextExpanded ? 'main-area--expanded' : ''}`}>
                     <div className="panel panel--job">
-                      <div className="panel__title">Job</div>
                       <div className="panel__body">
                         <JobSteps
                           job={selectedJob}
@@ -450,21 +450,19 @@ export default function App() {
                     </div>
 
                     <div className="panel panel--context">
-                      <div className="panel__title">
-                        <div className="panel__titleRow">
-                          <Typography.Text strong className="panel__titleText">
-                            {selectedJob?.steps.find((s) => s.key === selectedStepKey)?.title ?? 'Upload'}
-                          </Typography.Text>
-                          <Button
-                            type="text"
-                            size="small"
-                            aria-label={contextExpanded ? 'collapse-context' : 'expand-context'}
-                            icon={contextExpanded ? <CompressOutlined /> : <ExpandOutlined />}
-                            onClick={() => setContextExpanded((v) => !v)}
-                          />
-                        </div>
+                      <div className="panel__titleRow">
+                        <Typography.Text style={{ fontSize: '24px', fontWeight: '700' }} className="panel__titleText">
+                          {selectedJob?.steps.find((s) => s.key === selectedStepKey)?.title ?? 'Upload'}
+                        </Typography.Text>
+                        <Button
+                          type="text"
+                          size="small"
+                          aria-label={contextExpanded ? 'collapse-context' : 'expand-context'}
+                          icon={contextExpanded ? <CompressOutlined /> : <ExpandOutlined />}
+                          onClick={() => setContextExpanded((v) => !v)}
+                        />
                       </div>
-                      <div className="panel__body">
+                      <div style={{ padding: '0', border: '0' }} className="panel__body">
                         <UploadPanel job={selectedJob} subContext={selectedSubContext} uploaded={selectedUpload} />
                       </div>
                     </div>

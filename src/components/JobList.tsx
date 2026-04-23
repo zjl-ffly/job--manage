@@ -1,7 +1,5 @@
-import { Empty, Space, Tag, Typography } from 'antd'
-import { CheckCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, SyncOutlined } from '@ant-design/icons'
+import { Empty, Space, Tag } from 'antd'
 import dayjs from 'dayjs'
-import React from 'react'
 import type { JobListItem } from '../domain/types'
 
 function statusTagClass(status: string): string {
@@ -20,20 +18,13 @@ function statusLabel(status: string): string {
   return status
 }
 
-function statusIcon(status: string) {
-  if (status === 'completed') return <CheckCircleOutlined />
-  if (status === 'running') return <SyncOutlined spin />
-  if (status === 'failed') return <CloseCircleOutlined />
-  return <ClockCircleOutlined />
-}
-
 export function JobList(props: { jobs: JobListItem[]; selectedId?: string; onSelect: (jobId: string) => void }) {
   const { jobs, selectedId, onSelect } = props
 
   if (!jobs.length) return <Empty description="No jobs" />
 
   return (
-    <Space direction="vertical" style={{ width: '100%' }} size={8}>
+    <Space vertical style={{ width: '100%', padding: '0 10px' }} size={8}>
       {jobs.map((j) => {
         const active = j.id === selectedId
         return (
@@ -49,12 +40,15 @@ export function JobList(props: { jobs: JobListItem[]; selectedId?: string; onSel
             <div className="job-card__name">{j.name}</div>
             <div className="job-card__meta">Job ID: {j.id}</div>
             <div className="job-card__meta">Started: {dayjs(j.createdAt).format('M/D/YYYY, h:mm:ss A')}</div>
-            <div className="job-card__bottom">
-              <Tag className={statusTagClass(j.status)} bordered icon={statusIcon(j.status)}>
-                {statusLabel(j.status)}
-              </Tag>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <div className="job-card__bottom">
+                <Tag className={statusTagClass(j.status)}>
+                  {statusLabel(j.status)}
+                </Tag>
+              </div>
+              <div className="job-card__runtime">Runtime ID: {j.runtimeId}</div>
             </div>
-            <div className="job-card__runtime">Runtime ID: {j.runtimeId}</div>
+
           </div>
         )
       })}

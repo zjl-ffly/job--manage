@@ -1,5 +1,5 @@
 import { Button, DatePicker, Select } from 'antd'
-import { PlusOutlined } from '@ant-design/icons'
+import { RightCircleOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import type { Job } from '../domain/types'
 import type { JobFilters } from '../domain/types'
@@ -29,16 +29,16 @@ export function FiltersBar(props: {
           key: 'upload',
           title: 'Upload',
           description: "Upload files to the first step's input directory of this run.",
-          status: 'pending'
+          status: 'running'
         },
-        { key: 'rename', title: 'Rename File', description: 'Rename the file as needed.', status: 'pending' },
+        { key: 'rename', title: 'Rename File', description: 'Rename the file as needed.', status: 'running' },
         {
           key: 'approval',
           title: 'Send Approval Notification',
           description: 'An approval notification will be sent out.',
-          status: 'pending'
+          status: 'running'
         },
-        { key: 'review', title: 'Wait For Review', description: 'Waiting for review.', status: 'pending' }
+        { key: 'review', title: 'Wait For Review', description: 'Waiting for review.', status: 'running' }
       ]
     }
     onNewJob(job)
@@ -115,7 +115,11 @@ export function FiltersBar(props: {
         </div>
 
         <div className="filters__actions">
-          <Button type="primary" icon={<PlusOutlined />} onClick={createNewJob} aria-label="new-job-btn">
+          <Button type="primary" icon={<RightCircleOutlined />} onClick={createNewJob} aria-label="new-job-btn"
+            styles={{
+              root: { backgroundColor: '#000D80', borderRadius: '0', fontWeight: '600' }
+            }}
+          >
             New Job
           </Button>
         </div>
