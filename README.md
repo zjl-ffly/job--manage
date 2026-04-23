@@ -1,3 +1,18 @@
+#### 本地访问
+
+```bash
+npm install
+npm run dev
+```
+
+#### 静态服务访问
+
+```bash
+https://job-manage-9c8j.vercel.app/?name=Job+Name+for+Sample+A
+```
+
+---
+
 ## 目录结构总览
 
 ```text
@@ -29,20 +44,4 @@ job-management/
       UploadPanel.tsx        # 右侧上下文（当前展示 Overview）
     types/
       upload.ts              # UploadedFile 类型
-```
-
----
-
-#### 方式 A：使用 pnpm
-
-```bash
-pnpm install
-pnpm dev
-```
-
-#### 方式 B：使用 npm
-
-```bash
-npm install
-npm run dev
 ```
