@@ -1,4 +1,4 @@
-import type { Job, JobFilters, JobListItem, JobStepKey, SubContext, TopTab, User } from '../domain/types'
+import type { Job, JobFilters, JobListItem, JobStepKey, JobStepStatus, SubContext, TopTab, User } from '../domain/types'
 
 /**
  * GET /api/user
@@ -257,14 +257,53 @@ export function mockGetJobList(): JobListItem[] {
   }))
 }
 
+/** 返回拷贝，避免 React setState 因引用相同跳过更新 */
 export function mockGetJobById(jobId: string): Job | undefined {
-  return mockJobs.find((j) => j.id === jobId)
+  const j = mockJobs.find((x) => x.id === jobId)
+  if (!j) return undefined
+  return {
+    ...j,
+    steps: j.steps.map((s) => ({ ...s })),
+    uploadedFile: j.uploadedFile ? { ...j.uploadedFile } : undefined
+  }
 }
 
 export function mockDeleteJobById(jobId: string): boolean {
   const before = mockJobs.length
   mockJobs = mockJobs.filter((j) => j.id !== jobId)
   return mockJobs.length !== before
+}
+
+function mapStepStatus(steps: Job['steps'], patch: Partial<Record<JobStepKey, JobStepStatus>>): Job['steps'] {
+  return steps.map((s) => (patch[s.key] != null ? { ...s, status: patch[s.key]! } : s))
+}
+
+/** Mock：仅完成上传步骤并记录文件信息，不影响 rename */
+export function mockUploadJobFile(jobId: string, meta: { name: string; size: number; mimeType?: string }): Job | undefined {
+  const job = mockJobs.find((j) => j.id === jobId)
+  if (!job) return undefined
+  const now = new Date().toISOString()
+  job.uploadedFile = {
+    originalName: meta.name,
+    currentName: meta.name,
+    size: meta.size,
+    uploadedAt: now,
+    mimeType: meta.mimeType
+  }
+  job.steps = mapStepStatus(job.steps, { upload: 'completed' })
+  return mockGetJobById(jobId)
+}
+
+/** Mock：完成 rename 步骤；同步更新 Job 名称（左侧列表、中间标题展示的是 name） */
+export function mockRenameJobFile(jobId: string, newName: string): Job | undefined {
+  const trimmed = newName.trim()
+  if (!trimmed) return undefined
+  const job = mockJobs.find((j) => j.id === jobId)
+  if (!job) return undefined
+  job.name = trimmed
+  job.renamedName = trimmed
+  job.steps = mapStepStatus(job.steps, { rename: 'completed' })
+  return mockGetJobById(jobId)
 }
 
 export function mockGetSubContextById(jobId: string, stepKey: JobStepKey): SubContext {
@@ -278,14 +317,20 @@ export function mockGetSubContextById(jobId: string, stepKey: JobStepKey): SubCo
   const isRename = stepKey === 'rename'
   const completed = isRename ? renameCompleted : uploadCompleted
   const state = completed ? 'Completed' : 'Pending'
+  const uploadLabel = job?.uploadedFile?.currentName
+  const renameLabelText = job?.renamedName
   const detail = isRename
     ? completed
-      ? 'Renamed file'
+      ? renameLabelText
+        ? `Renamed: ${renameLabelText}`
+        : 'Renamed file'
       : renameFailed
         ? 'Rename failed'
         : 'Waiting for rename'
     : completed
-      ? 'Uploaded files'
+      ? uploadLabel
+        ? `Uploaded: ${uploadLabel}`
+        : 'Uploaded files'
       : 'No file uploaded'
 
   return {
@@ -299,5 +344,18 @@ export function mockGetSubContextById(jobId: string, stepKey: JobStepKey): SubCo
       renameState: renameCompleted ? 'Completed' : 'Pending'
     }
   }
+}
+
+function cloneJobsForTestSeed(jobs: Job[]): Job[] {
+  return JSON.parse(JSON.stringify(jobs)) as Job[]
+}
+
+/** 模块加载时的快照，供单测 `resetMockJobsForTests` 恢复 */
+const MOCK_JOBS_BASELINE: Job[] = cloneJobsForTestSeed(mockJobs)
+
+/** 将内存中的 mockJobs 恢复为初始数据（仅单测使用） */
+export function resetMockJobsForTests(): void {
+  const fresh = cloneJobsForTestSeed(MOCK_JOBS_BASELINE)
+  mockJobs.splice(0, mockJobs.length, ...fresh)
 }
 

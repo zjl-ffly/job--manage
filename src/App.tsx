@@ -3,7 +3,7 @@ import { CompressOutlined, ExpandOutlined, LogoutOutlined, LeftOutlined, RightOu
 import zhCN from 'antd/locale/zh_CN'
 import dayjs from 'dayjs'
 import React from 'react'
-import type { Job, JobFilters, JobListItem, JobStepKey, JobStepStatus, JobStatus, JobType, SubContext, TopTab, TopTabKey } from './domain/types'
+import type { Job, JobFilters, JobListItem, JobStepKey, JobStatus, JobType, SubContext, TopTab, TopTabKey } from './domain/types'
 import {
   deleteJobById,
   fetchCurrentUser,
@@ -14,14 +14,15 @@ import {
   getJobById,
   getJobList,
   getSubContextById,
-  loginOut
+  loginOut,
+  renameJobFile,
+  uploadJobFile
 } from './api'
 import { useAppStore } from './store'
 import { FiltersBar } from './components/FiltersBar'
 import { JobList } from './components/JobList'
 import { JobSteps } from './components/JobSteps'
 import { UploadPanel } from './components/UploadPanel'
-import type { UploadedFile } from './types/upload'
 import { useQueryState } from './hooks/useQueryState'
 
 const { Header, Content } = Layout
@@ -49,10 +50,6 @@ function normalize(s: string): string {
   return s.trim().toLowerCase()
 }
 
-function setJobStepStatus(job: Job, key: JobStepKey, status: JobStepStatus): Job {
-  return { ...job, steps: job.steps.map((s) => (s.key === key ? { ...s, status } : s)) }
-}
-
 export default function App() {
   const user = useAppStore((s) => s.user)
   const actions = useAppStore((s) => s.actions)
@@ -61,7 +58,6 @@ export default function App() {
   const [selectedJobId, setSelectedJobId] = React.useState<string | undefined>(undefined)
   const [selectedJob, setSelectedJob] = React.useState<Job | undefined>(undefined)
   const [selectedSubContext, setSelectedSubContext] = React.useState<SubContext | undefined>(undefined)
-  const [uploadsByJobId, setUploadsByJobId] = React.useState<Record<string, UploadedFile | undefined>>({})
   const [jobListCollapsed, setJobListCollapsed] = React.useState(false)
   const [selectedStepKey, setSelectedStepKey] = React.useState<JobStepKey>('upload')
   const [contextExpanded, setContextExpanded] = React.useState(false)
@@ -160,10 +156,23 @@ export default function App() {
       .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
   }, [filters.endDate, filters.name, filters.startDate, filters.status, filters.type, jobList])
 
-  const selectedUpload = React.useMemo(
-    () => (selectedJobId ? uploadsByJobId[selectedJobId] : undefined),
-    [selectedJobId, uploadsByJobId]
-  )
+  const selectedStepKeyRef = React.useRef<JobStepKey>(selectedStepKey)
+  selectedStepKeyRef.current = selectedStepKey
+
+  const refreshJobData = React.useCallback(async () => {
+    const id = selectedJobId
+    if (!id) return
+    try {
+      const stepKey = selectedStepKeyRef.current
+      const [list, job] = await Promise.all([getJobList(), getJobById(id)])
+      setJobList(list)
+      setSelectedJob(job)
+      const sub = await getSubContextById(id, stepKey)
+      setSelectedSubContext(sub)
+    } catch (e: any) {
+      message.error(e?.message ? `刷新 Job 失败：${e.message}` : '刷新 Job 失败')
+    }
+  }, [selectedJobId])
 
   React.useEffect(() => {
     const controller = new AbortController()
@@ -213,38 +222,6 @@ export default function App() {
     ])
     setSelectedJobId(job.id)
     setSelectedJob(job)
-  }
-
-  function onUploadToSelected(file: File) {
-    if (!selectedJobId) return
-    const uploaded: UploadedFile = {
-      uid: `${selectedJobId}_${Date.now()}`,
-      originalName: file.name,
-      currentName: file.name,
-      size: file.size,
-      type: file.type,
-      uploadedAt: new Date().toISOString()
-    }
-    setUploadsByJobId((prev) => ({ ...prev, [selectedJobId]: uploaded }))
-    setSelectedJob((prev) => (prev && prev.id === selectedJobId ? setJobStepStatus(prev, 'upload', 'completed') : prev))
-  }
-
-  function onRenameSelected(nextName: string) {
-    if (!selectedJobId) return
-    const safe = nextName.trim()
-    if (!safe) return
-    setUploadsByJobId((prev) => {
-      const cur = prev[selectedJobId]
-      if (!cur) return prev
-      return { ...prev, [selectedJobId]: { ...cur, currentName: safe } }
-    })
-    setSelectedJob((prev) => (prev && prev.id === selectedJobId ? setJobStepStatus(prev, 'rename', 'completed') : prev))
-  }
-
-  function onRenameMock() {
-    if (!selectedUpload) return
-    const ext = selectedUpload.currentName.includes('.') ? `.${selectedUpload.currentName.split('.').pop()}` : ''
-    onRenameSelected(`renamed_${Date.now()}${ext}`)
   }
 
   async function onSelectStep(key: JobStepKey) {
@@ -439,12 +416,26 @@ export default function App() {
                       <div className="panel__body">
                         <JobSteps
                           job={selectedJob}
-                          uploaded={selectedUpload}
-                          onUpload={onUploadToSelected}
-                          onRenameMock={onRenameMock}
                           selectedStepKey={selectedStepKey}
                           onSelectStep={onSelectStep}
                           onDeleteJob={onDeleteSelectedJob}
+                          onUploadFile={async (file) => {
+                            if (!selectedJobId) return
+                            try {
+                              await uploadJobFile(selectedJobId, file)
+                              await refreshJobData()
+                              message.success('上传成功')
+                            } catch (e: any) {
+                              message.error(e?.message ? `上传失败：${e.message}` : '上传失败')
+                              throw e
+                            }
+                          }}
+                          onRenameConfirm={async (name) => {
+                            if (!selectedJobId) throw new Error('未选择 Job')
+                            await renameJobFile(selectedJobId, name)
+                            await refreshJobData()
+                            message.success('已重命名')
+                          }}
                         />
                       </div>
                     </div>
@@ -463,7 +454,7 @@ export default function App() {
                         />
                       </div>
                       <div style={{ padding: '0', border: '0' }} className="panel__body">
-                        <UploadPanel job={selectedJob} subContext={selectedSubContext} uploaded={selectedUpload} />
+                        <UploadPanel job={selectedJob} subContext={selectedSubContext} activeStepKey={selectedStepKey} />
                       </div>
                     </div>
                   </div>

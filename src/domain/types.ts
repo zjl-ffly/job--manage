@@ -22,6 +22,15 @@ export type JobListItem = {
   runtimeId: string
 }
 
+/** 由 mock / 后端在 getJobById 中返回的上传文件信息 */
+export type JobUploadedFile = {
+  originalName: string
+  currentName: string
+  size: number
+  uploadedAt: string // ISO
+  mimeType?: string
+}
+
 export type Job = {
   id: string
   name: string
@@ -30,6 +39,9 @@ export type Job = {
   createdAt: string // ISO
   runtimeId: string
   steps: JobStep[]
+  uploadedFile?: JobUploadedFile
+  /** 重命名步骤结果，与上传无关 */
+  renamedName?: string
 }
 
 export type SubContext = {

@@ -1,15 +1,11 @@
 import { Empty, Space, Tabs, Tag, Typography } from 'antd'
 import React from 'react'
-import type { Job } from '../domain/types'
+import type { Job, JobStepKey } from '../domain/types'
 import type { SubContext } from '../domain/types'
-import type { UploadedFile } from '../types/upload'
 
-export function UploadPanel(props: {
-  job?: Job
-  subContext?: SubContext
-  uploaded?: UploadedFile
-}) {
-  const { job, subContext, uploaded } = props
+export function UploadPanel(props: { job?: Job; subContext?: SubContext; activeStepKey?: JobStepKey }) {
+  const { job, subContext, activeStepKey } = props
+  const stepKey = activeStepKey ?? 'upload'
   const uploadStep = job?.steps.find((s) => s.key === 'upload')
   const renameStep = job?.steps.find((s) => s.key === 'rename')
 
@@ -17,16 +13,27 @@ export function UploadPanel(props: {
 
   const stateLabel = subContext?.overview.state ?? (uploadStep?.status === 'completed' ? 'Completed' : 'Running')
   const renameLabel = subContext?.overview.renameState ?? (renameStep?.status === 'completed' ? 'Completed' : 'Running')
+  const uploaded = job.uploadedFile
   const detailNode =
     subContext?.overview.detail ??
-    (uploaded ? (
-      <span>
-        uploaded: <Typography.Text code>{uploaded.currentName}</Typography.Text>
-      </span>
-    ) : (
-      'No file uploaded'
-    ))
-  const runtimeStatus = subContext?.overview.runtimeStatus ?? (uploaded ? 'Uploaded Files' : 'Waiting')
+    (stepKey === 'rename'
+      ? job.renamedName ? (
+          <span>
+            renamed: <Typography.Text code>{job.renamedName}</Typography.Text>
+          </span>
+        ) : (
+          'No rename name set'
+        )
+      : uploaded ? (
+          <span>
+            uploaded: <Typography.Text code>{uploaded.currentName}</Typography.Text>
+          </span>
+        ) : (
+          'No file uploaded'
+        ))
+  const runtimeStatus =
+    subContext?.overview.runtimeStatus ??
+    (stepKey === 'rename' ? (job.renamedName ? 'Renamed' : 'Waiting') : uploaded ? 'Uploaded Files' : 'Waiting')
   const definitionStepId = subContext?.overview.definitionStepId ?? 'mocked-d-step-id'
   const runtimeStepId = subContext?.overview.runtimeStepId ?? 'mocked-r-step-id'
 

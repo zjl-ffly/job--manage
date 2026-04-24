@@ -1,8 +1,7 @@
-import { Button, Divider, Empty, Space, Tag, Typography } from 'antd'
+import { Button, Divider, Empty, Input, Modal, Space, Tag, Typography, message } from 'antd'
 import { DeleteOutlined } from '@ant-design/icons'
 import React from 'react'
 import type { Job, JobStepKey } from '../domain/types'
-import type { UploadedFile } from '../types/upload'
 
 function statusLabel(status: string): string {
   if (status === 'completed') return 'Completed'
@@ -22,20 +21,36 @@ function jobStatusClass(status: string): string {
 
 export function JobSteps(props: {
   job?: Job
-  uploaded?: UploadedFile
-  onUpload: (file: File) => void
-  onRenameMock: () => void
   selectedStepKey?: JobStepKey
   onSelectStep: (key: JobStepKey) => void
   onDeleteJob: () => void
+  onUploadFile: (file: File) => Promise<void>
+  onRenameConfirm: (name: string) => Promise<void>
 }) {
-  const { job, uploaded, onUpload, onRenameMock, selectedStepKey, onSelectStep, onDeleteJob } = props
+  const { job, selectedStepKey, onSelectStep, onDeleteJob, onUploadFile, onRenameConfirm } = props
+
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
+  const [renameOpen, setRenameOpen] = React.useState(false)
+  const [renameValue, setRenameValue] = React.useState('')
+
+  React.useEffect(() => {
+    if (renameOpen && job) {
+      setRenameValue(job.renamedName ?? '')
+    }
+  }, [renameOpen, job])
 
   if (!job) return <Empty description="Select a job" />
 
-  void onUpload
-  void uploaded
-  void onRenameMock
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    try {
+      await onUploadFile(file)
+    } catch {
+      /* errors surfaced in App onUploadFile */
+    }
+  }
 
   const done = job.steps.filter((s) => s.status === 'completed').length
   const total = job.steps.length
@@ -44,6 +59,47 @@ export function JobSteps(props: {
 
   return (
     <div className="jobpane">
+      <input
+        ref={fileInputRef}
+        type="file"
+        style={{ display: 'none' }}
+        aria-hidden
+        onChange={handleFileChange}
+      />
+
+      <Modal
+        title="重命名文件"
+        open={renameOpen}
+        okText="确定"
+        cancelText="取消"
+        destroyOnClose
+        onCancel={() => setRenameOpen(false)}
+        onOk={async () => {
+          const v = renameValue.trim()
+          if (!v) {
+            message.error('请输入文件名')
+            return Promise.reject(new Error('empty'))
+          }
+          try {
+            await onRenameConfirm(v)
+            setRenameOpen(false)
+          } catch (err: unknown) {
+            message.error(err instanceof Error ? err.message : '重命名失败')
+            return Promise.reject(err)
+          }
+        }}
+      >
+        <Space direction="vertical" style={{ width: '100%' }} size={8}>
+          <Typography.Text type="secondary">新文件名（含扩展名）</Typography.Text>
+          <Input
+            value={renameValue}
+            onChange={(e) => setRenameValue(e.target.value)}
+            placeholder="例如：report_final.pdf"
+            autoFocus
+          />
+        </Space>
+      </Modal>
+
       <div className="jobpane__top">
         <div className="jobpane__type">Job Type {job.type.replace('Type ', '')}</div>
         <div className="jobpane__nameRow">
@@ -85,6 +141,12 @@ export function JobSteps(props: {
               tabIndex={0}
               aria-label={`step-${s.key}`}
               onClick={() => onSelectStep(s.key)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  onSelectStep(s.key)
+                }
+              }}
             >
               <div className="jobstep__head">
                 <div className="jobstep__title">
@@ -96,7 +158,22 @@ export function JobSteps(props: {
               </div>
               <Typography.Text type="secondary">{s.description}</Typography.Text>
               <div className="jobstep__actions">
-                <span className="jobstep__pill" aria-label={`step-action-${s.key}`}>
+                <span
+                  className="jobstep__pill"
+                  aria-label={`step-action-${s.key}`}
+                  onClick={
+                    s.key === 'upload' || s.key === 'rename'
+                      ? (e) => {
+                          e.stopPropagation()
+                          if (s.key === 'upload') {
+                            fileInputRef.current?.click()
+                          } else {
+                            setRenameOpen(true)
+                          }
+                        }
+                      : undefined
+                  }
+                >
                   {s.key === 'upload' ? 'upload' : s.key === 'rename' ? 'Rename' : s.key === 'approval' ? 'Send' : 'Signal'}
                 </span>
               </div>
@@ -107,4 +184,3 @@ export function JobSteps(props: {
     </div>
   )
 }
-

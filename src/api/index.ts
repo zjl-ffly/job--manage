@@ -9,7 +9,9 @@ import {
   mockGetJobList,
   mockGetJobById,
   mockDeleteJobById,
-  mockGetSubContextById
+  mockGetSubContextById,
+  mockUploadJobFile,
+  mockRenameJobFile
 } from './mock'
 
 // 模拟登录状态（简单实现，实际生产环境可能需要更复杂的本地存储逻辑）
@@ -76,6 +78,28 @@ export function deleteJobById(jobId: string): Promise<{ ok: true }> {
 
 export function getSubContextById(jobId: string, stepKey: JobStepKey): Promise<SubContext> {
   return Promise.resolve(mockGetSubContextById(jobId, stepKey))
+}
+
+/** Mock 上传：更新内存中的 Job，供随后 getJobById / getJobList 读取 */
+export function uploadJobFile(jobId: string, file: File): Promise<Job> {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      const job = mockUploadJobFile(jobId, { name: file.name, size: file.size, mimeType: file.type })
+      if (!job) reject(new Error('Job not found'))
+      else resolve(job)
+    }, 280)
+  })
+}
+
+/** Mock 重命名：与上传无关，仅校验非空名称 */
+export function renameJobFile(jobId: string, newName: string): Promise<Job> {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      const job = mockRenameJobFile(jobId, newName)
+      if (!job) reject(new Error('无法重命名：请输入有效文件名，或 Job 不存在'))
+      else resolve(job)
+    }, 280)
+  })
 }
 
 // 不再需要 installApiMocks
