@@ -104,147 +104,177 @@ function mkJob(partial: Partial<Job> & Pick<Job, 'id' | 'name' | 'type' | 'statu
   }
 }
 
+// 从 localStorage 加载初始数据，如果不存在则使用默认值
+function loadJobsFromStorage(): Job[] {
+  try {
+    const stored = globalThis.localStorage?.getItem('jm_jobs')
+    if (stored) {
+      return JSON.parse(stored) as Job[]
+    }
+  } catch {
+    // ignore
+  }
+  return getDefaultJobs()
+}
+
+function saveJobsToStorage(jobs: Job[]): void {
+  try {
+    globalThis.localStorage?.setItem('jm_jobs', JSON.stringify(jobs))
+  } catch {
+    // ignore
+  }
+}
+
+function getDefaultJobs(): Job[] {
+  return [
+    mkJob({
+      id: 'job_a',
+      name: 'Job Name for Sample A',
+      type: 'Type A',
+      status: 'completed',
+      createdAt: '2026-04-20T10:15:00.000Z',
+      runtimeId: 'abcde-12345-00001',
+      steps: [
+        {
+          key: 'upload',
+          title: 'Upload',
+          description: "Upload files to the first step's input directory of this run.",
+          status: 'completed'
+        },
+        {
+          key: 'rename',
+          title: 'Rename File',
+          description: 'Rename the file as needed.',
+          status: 'completed'
+        },
+        {
+          key: 'approval',
+          title: 'Send Approval Notification',
+          description: 'An approval notification will be sent out.',
+          status: 'completed'
+        },
+        {
+          key: 'review',
+          title: 'Wait For Review',
+          description: 'Waiting for review.',
+          status: 'completed'
+        }
+      ]
+    }),
+    mkJob({
+      id: 'job_b',
+      name: 'Job Name for Sample B',
+      type: 'Type B',
+      status: 'running',
+      createdAt: '2026-04-21T05:22:00.000Z',
+      runtimeId: 'abcde-12345-00002',
+      steps: [
+        {
+          key: 'upload',
+          title: 'Upload',
+          description: "Upload files to the first step's input directory of this run.",
+          status: 'running'
+        },
+        {
+          key: 'rename',
+          title: 'Rename File',
+          description: 'Rename the file as needed.',
+          status: 'running'
+        },
+        {
+          key: 'approval',
+          title: 'Send Approval Notification',
+          description: 'An approval notification will be sent out.',
+          status: 'running'
+        },
+        {
+          key: 'review',
+          title: 'Wait For Review',
+          description: 'Waiting for review.',
+          status: 'running'
+        }
+      ]
+    }),
+    mkJob({
+      id: 'job_c',
+      name: 'Job Name for Sample C',
+      type: 'Type C',
+      status: 'failed',
+      createdAt: '2026-04-19T09:30:00.000Z',
+      runtimeId: 'abcde-12345-00003',
+      steps: [
+        {
+          key: 'upload',
+          title: 'Upload',
+          description: "Upload files to the first step's input directory of this run.",
+          status: 'failed'
+        },
+        {
+          key: 'rename',
+          title: 'Rename File',
+          description: 'Rename the file as needed.',
+          status: 'failed'
+        },
+        {
+          key: 'approval',
+          title: 'Send Approval Notification',
+          description: 'An approval notification will be sent out.',
+          status: 'failed'
+        },
+        {
+          key: 'review',
+          title: 'Wait For Review',
+          description: 'Waiting for review.',
+          status: 'failed'
+        }
+      ]
+    }),
+    mkJob({
+      id: 'job_d',
+      name: 'Job Name for Sample D',
+      type: 'Type A',
+      status: 'queued',
+      createdAt: '2026-04-23T14:45:00.000Z',
+      runtimeId: 'abcde-12345-00004',
+      steps: [
+        {
+          key: 'upload',
+          title: 'Upload',
+          description: "Upload files to the first step's input directory of this run.",
+          status: 'completed'
+        },
+        {
+          key: 'rename',
+          title: 'Rename File',
+          description: 'Rename the file as needed.',
+          status: 'completed'
+        },
+        {
+          key: 'approval',
+          title: 'Send Approval Notification',
+          description: 'An approval notification will be sent out.',
+          status: 'completed'
+        },
+        {
+          key: 'review',
+          title: 'Wait For Review',
+          description: 'Waiting for review.',
+          status: 'completed'
+        }
+      ]
+    }),
+  ]
+}
+
 /**
  * GET /api/bootstrap.jobs
  */
-export let mockJobs: Job[] = [
-  mkJob({
-    id: 'job_a',
-    name: 'Job Name for Sample A',
-    type: 'Type A',
-    status: 'completed',
-    createdAt: '2026-04-20T10:15:00.000Z',
-    runtimeId: 'abcde-12345-00001',
-    steps: [
-      {
-        key: 'upload',
-        title: 'Upload',
-        description: "Upload files to the first step's input directory of this run.",
-        status: 'completed'
-      },
-      {
-        key: 'rename',
-        title: 'Rename File',
-        description: 'Rename the file as needed.',
-        status: 'completed'
-      },
-      {
-        key: 'approval',
-        title: 'Send Approval Notification',
-        description: 'An approval notification will be sent out.',
-        status: 'completed'
-      },
-      {
-        key: 'review',
-        title: 'Wait For Review',
-        description: 'Waiting for review.',
-        status: 'completed'
-      }
-    ]
-  }),
-  mkJob({
-    id: 'job_b',
-    name: 'Job Name for Sample B',
-    type: 'Type B',
-    status: 'running',
-    createdAt: '2026-04-21T05:22:00.000Z',
-    runtimeId: 'abcde-12345-00002',
-    steps: [
-      {
-        key: 'upload',
-        title: 'Upload',
-        description: "Upload files to the first step's input directory of this run.",
-        status: 'running'
-      },
-      {
-        key: 'rename',
-        title: 'Rename File',
-        description: 'Rename the file as needed.',
-        status: 'running'
-      },
-      {
-        key: 'approval',
-        title: 'Send Approval Notification',
-        description: 'An approval notification will be sent out.',
-        status: 'running'
-      },
-      {
-        key: 'review',
-        title: 'Wait For Review',
-        description: 'Waiting for review.',
-        status: 'running'
-      }
-    ]
-  }),
-  mkJob({
-    id: 'job_c',
-    name: 'Job Name for Sample C',
-    type: 'Type C',
-    status: 'failed',
-    createdAt: '2026-04-19T09:30:00.000Z',
-    runtimeId: 'abcde-12345-00003',
-    steps: [
-      {
-        key: 'upload',
-        title: 'Upload',
-        description: "Upload files to the first step's input directory of this run.",
-        status: 'failed'
-      },
-      {
-        key: 'rename',
-        title: 'Rename File',
-        description: 'Rename the file as needed.',
-        status: 'failed'
-      },
-      {
-        key: 'approval',
-        title: 'Send Approval Notification',
-        description: 'An approval notification will be sent out.',
-        status: 'failed'
-      },
-      {
-        key: 'review',
-        title: 'Wait For Review',
-        description: 'Waiting for review.',
-        status: 'failed'
-      }
-    ]
-  }),
-  mkJob({
-    id: 'job_d',
-    name: 'Job Name for Sample D',
-    type: 'Type A',
-    status: 'queued',
-    createdAt: '2026-04-23T14:45:00.000Z',
-    runtimeId: 'abcde-12345-00004',
-    steps: [
-      {
-        key: 'upload',
-        title: 'Upload',
-        description: "Upload files to the first step's input directory of this run.",
-        status: 'completed'
-      },
-      {
-        key: 'rename',
-        title: 'Rename File',
-        description: 'Rename the file as needed.',
-        status: 'completed'
-      },
-      {
-        key: 'approval',
-        title: 'Send Approval Notification',
-        description: 'An approval notification will be sent out.',
-        status: 'completed'
-      },
-      {
-        key: 'review',
-        title: 'Wait For Review',
-        description: 'Waiting for review.',
-        status: 'completed'
-      }
-    ]
-  }),
-]
+export let mockJobs: Job[] = loadJobsFromStorage()
+
+// 首次加载时保存到 localStorage
+if (!globalThis.localStorage?.getItem('jm_jobs')) {
+  saveJobsToStorage(mockJobs)
+}
 
 export function mockGetJobList(): JobListItem[] {
   return mockJobs.map((j) => ({
@@ -271,6 +301,7 @@ export function mockGetJobById(jobId: string): Job | undefined {
 export function mockDeleteJobById(jobId: string): boolean {
   const before = mockJobs.length
   mockJobs = mockJobs.filter((j) => j.id !== jobId)
+  saveJobsToStorage(mockJobs)
   return mockJobs.length !== before
 }
 
@@ -291,6 +322,7 @@ export function mockUploadJobFile(jobId: string, meta: { name: string; size: num
     mimeType: meta.mimeType
   }
   job.steps = mapStepStatus(job.steps, { upload: 'completed' })
+  saveJobsToStorage(mockJobs)
   return mockGetJobById(jobId)
 }
 
@@ -303,6 +335,7 @@ export function mockRenameJobFile(jobId: string, newName: string): Job | undefin
   job.name = trimmed
   job.renamedName = trimmed
   job.steps = mapStepStatus(job.steps, { rename: 'completed' })
+  saveJobsToStorage(mockJobs)
   return mockGetJobById(jobId)
 }
 
@@ -351,11 +384,11 @@ function cloneJobsForTestSeed(jobs: Job[]): Job[] {
 }
 
 /** 模块加载时的快照，供单测 `resetMockJobsForTests` 恢复 */
-const MOCK_JOBS_BASELINE: Job[] = cloneJobsForTestSeed(mockJobs)
+const MOCK_JOBS_BASELINE: Job[] = cloneJobsForTestSeed(getDefaultJobs())
 
 /** 将内存中的 mockJobs 恢复为初始数据（仅单测使用） */
 export function resetMockJobsForTests(): void {
   const fresh = cloneJobsForTestSeed(MOCK_JOBS_BASELINE)
   mockJobs.splice(0, mockJobs.length, ...fresh)
+  // 测试环境下不保存到 localStorage
 }
-
